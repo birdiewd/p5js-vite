@@ -3,10 +3,12 @@ import p5 from 'p5'
 export class Point {
   x: number
   y: number
+  ref?: any
 
-  constructor(x: number, y: number) {
+  constructor(x: number, y: number, ref?: any) {
     this.x = x
     this.y = y
+    this.ref = ref
   }
 }
 
@@ -51,6 +53,32 @@ export class Rect {
       return true
 
     return false
+  }
+}
+
+export class Ellipse {
+  x: number
+  y: number
+  rx: number
+  ry: number
+
+  constructor(x: number, y: number, rx: number, ry: number) {
+    this.x = x
+    this.y = y
+    this.rx = rx
+    this.ry = ry
+  }
+
+  contains(point: Point) {
+    const normalizedX = (point.x - this.x) / this.rx
+    const normalizedY = (point.y - this.y) / this.ry
+    return normalizedX * normalizedX + normalizedY * normalizedY <= 1
+  }
+
+  intersects(boundary: Rect) {
+    let boundingBox = new Rect(this.x, this.y, this.rx, this.ry)
+
+    return boundingBox.intersects(boundary)
   }
 }
 
@@ -109,20 +137,20 @@ export class QuadTree {
     this.divided = true
   }
 
-  query(range: Rect, found: Point[]) {
+  query(range: Rect | Ellipse, found: Point[]) {
     if (!range.intersects(this.boundary)) return false
 
     for (let i = 0; i < this.points.length; i++) {
       if (range.contains(this.points[i])) {
         found.push(this.points[i])
       }
+    }
 
-      if (this.divided) {
-        this.northEast?.query(range, found)
-        this.northWest?.query(range, found)
-        this.southEast?.query(range, found)
-        this.southWest?.query(range, found)
-      }
+    if (this.divided) {
+      this.northEast?.query(range, found)
+      this.northWest?.query(range, found)
+      this.southEast?.query(range, found)
+      this.southWest?.query(range, found)
     }
 
     // console.log(found)
@@ -130,19 +158,26 @@ export class QuadTree {
     return found
   }
 
+  clear() {
+    this.points = []
+    this.divided = false
+  }
+
   display(p: p5) {
     p.noFill()
+    p.strokeWeight(1)
     p.stroke(0)
     p.rectMode(p.CENTER)
     p.rect(this.boundary.x, this.boundary.y, this.boundary.w * 2, this.boundary.h * 2)
 
-    p.push()
-    p.noStroke()
-    p.fill(255, 0, 0)
-    for (let i = 0; i < this.points.length; i++) {
-      p.ellipse(this.points[i].x, this.points[i].y, 10, 10)
-    }
-    p.pop()
+    // p.push()
+    // p.noStroke()
+    // p.fill(255, 0, 0)
+
+    // for (let i = 0; i < this.points.length; i++) {
+    //   p.ellipse(this.points[i].x, this.points[i].y, 10, 10)
+    // }
+    // p.pop()
 
     if (this.divided) {
       this.northEast?.display(p)

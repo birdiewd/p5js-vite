@@ -17,7 +17,7 @@ export interface ControlsProps {
 }
 
 const App = () => {
-  const [run, setRun] = useState(false)
+  const [run, setRun] = useState(true)
   // ===
   const [showCircle, setShowCircle] = useState(true)
   const [circleCount, setCircleCount] = useState(10)
